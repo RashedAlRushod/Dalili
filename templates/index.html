@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dalili</title>
+    <link rel="icon" href="/static/D.png" type="image/png"> <!-- Added favicon -->
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background-color: #ececec; /* Updated background color */
+            color: #000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow: auto; /* Enable scrolling */
+            height: 100vh;
+        }
+
+        .container {
+            width: 80%;
+            max-width: 800px;
+            text-align: center;
+            margin-top: 150px; /* Space to adjust layout under the fixed logo */
+        }
+
+        .header {
+            display: flex;
+            justify-content: flex-start;
+            align-items: center;
+            width: 100%;
+            position: fixed; /* Keep logo fixed on top-left */
+            top: 0;
+            left: 0;
+            background-color: #ececec; /* Match the background */
+            padding: 10px;
+            z-index: 1000; /* Ensure it stays above other elements */
+        }
+
+        .logo {
+            height: 100px; /* Adjust the size of the logo */
+            width: auto;
+            margin-left: 10px;
+        }
+
+        .title {
+            margin-bottom: 20px;
+            font-size: 24px;
+            font-weight: bold;
+            color: #000; /* Black text */
+        }
+
+        .query-box {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #f1f5f9;
+            border-radius: 25px;
+            padding: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+            margin-bottom: 20px; /* Space between query box and results */
+            margin-top: 120px
+        }
+
+        .query-box input {
+            flex: 1;
+            border: none;
+            outline: none;
+            padding: 10px 15px;
+            font-size: 16px;
+            border-radius: 25px;
+            margin-right: 10px;
+        }
+
+        .query-box button {
+            background-color: #10b981; /* Green button */
+            color: white;
+            border: none;
+            border-radius: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .query-box button:hover {
+            background-color: #059669;
+        }
+
+        .result-box {
+            background-color: #ffffff; /* White result box */
+            border-radius: 15px;
+            padding: 15px;
+            font-size: 16px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+            text-align: left;
+            display: none; /* Hide by default */
+            margin-top: 20px;
+        }
+
+        .result-box p {
+            margin: 0;
+            color: #333; /* Dark gray text */
+        }
+
+        .clear-btn {
+            background-color: #dc3545; /* Red button */
+            color: white;
+            border: none;
+            border-radius: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            margin-top: 10px;
+        }
+
+        .clear-btn:hover {
+            background-color: #a71d2a;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <img src="/static/D.png" alt="Logo" class="logo" /> <!-- Added logo -->
+    </div>
+    <div class="container">
+        <h1 class="title">Your AI Assistant for Machine Learning Course</h1> <!-- Added title -->
+        <div class="query-box">
+            <input type="text" id="query-input" placeholder="Type your question here..." />
+            <button id="send-btn">Ask</button>
+        </div>
+        <div id="result-box" class="result-box">
+            <!-- Result will appear here -->
+        </div>
+        <button id="clear-btn" class="clear-btn" style="display: none;">Clear</button> <!-- Added Clear button -->
+    </div>
+
+    <script>
+        const sendBtn = document.getElementById('send-btn');
+        const clearBtn = document.getElementById('clear-btn');
+        const queryInput = document.getElementById('query-input');
+        const resultBox = document.getElementById('result-box');
+
+        // Handle query submission
+        sendBtn.addEventListener('click', async () => {
+            const queryText = queryInput.value.trim();
+
+            if (queryText) {
+                // Display "Please wait..." in the result box
+                resultBox.style.display = "block";
+                resultBox.innerHTML = `<p><i>Please wait...</i></p>`;
+
+                try {
+                    // Send the query to the backend
+                    const response = await fetch('/query', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ query: queryText })
+                    });
+
+                    const data = await response.json();
+
+                    // Format and display the response
+                    const [mainResponse, resources] = data.response.split('\n\nResources:\n');
+                    const formattedResources = resources.split('\n').join('<br>');
+
+                    resultBox.innerHTML = `
+                        <p>${mainResponse}</p>
+                        <hr>
+                        <p><b>Resources:</b></p>
+                        <p>${formattedResources}</p>
+                    `;
+                } catch (error) {
+                    // Handle errors (e.g., network issues)
+                    resultBox.innerHTML = `<p style="color: red;">Error fetching response. Please try again.</p>`;
+                }
+
+                // Clear the input field
+                queryInput.value = "";
+
+                // Show the Clear button
+                clearBtn.style.display = "inline-block";
+            }
+        });
+
+        // Handle Clear button click
+        clearBtn.addEventListener('click', () => {
+            resultBox.style.display = "none"; // Hide the result box
+            resultBox.innerHTML = ""; // Clear the content
+            clearBtn.style.display = "none"; // Hide the Clear button
+        });
+    </script>
+</body>
+</html>
